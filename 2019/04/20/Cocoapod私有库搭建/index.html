@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Cocoapods私有库 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="iOS CococaPod私有库开发环境搭建我们搭建私有库的目的是共享一个team的组件化代码。环境变量：cocoapods -v&#x3D;1.8.4 私有库组成搭建整套私有库，我们有两种  源代码仓库: 比如我们有组件为MyUIKit,MyTimeKit等。 spec仓库 : 存储了源代码仓库的podSpec文件的仓库。  私有库原理源文件仓库很容易理解，就是源代码仓库，当一个team体量大了之后会有很">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cocoapods私有库">
+<meta property="og:url" content="http://example.com/2019/04/20/Cocoapod%E7%A7%81%E6%9C%89%E5%BA%93%E6%90%AD%E5%BB%BA/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="iOS CococaPod私有库开发环境搭建我们搭建私有库的目的是共享一个team的组件化代码。环境变量：cocoapods -v&#x3D;1.8.4 私有库组成搭建整套私有库，我们有两种  源代码仓库: 比如我们有组件为MyUIKit,MyTimeKit等。 spec仓库 : 存储了源代码仓库的podSpec文件的仓库。  私有库原理源文件仓库很容易理解，就是源代码仓库，当一个team体量大了之后会有很">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2019-04-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-10-19T17:29:53.000Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="packages, Cocoapods">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Cocoapod私有库搭建" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Cocoapods私有库
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/04/20/Cocoapod%E7%A7%81%E6%9C%89%E5%BA%93%E6%90%AD%E5%BB%BA/" class="article-date">
+  <time datetime="2019-04-19T16:00:00.000Z" itemprop="datePublished">2019-04-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS-CococaPod私有库开发环境搭建"><a href="#iOS-CococaPod私有库开发环境搭建" class="headerlink" title="iOS CococaPod私有库开发环境搭建"></a>iOS CococaPod私有库开发环境搭建</h1><p>我们搭建私有库的目的是共享一个team的组件化代码。<br>环境变量：cocoapods -v=1.8.4</p>
+<h2 id="私有库组成"><a href="#私有库组成" class="headerlink" title="私有库组成"></a>私有库组成</h2><p>搭建整套私有库，我们有两种</p>
+<ol>
+<li>源代码仓库: 比如我们有组件为MyUIKit,MyTimeKit等。</li>
+<li>spec仓库 : 存储了源代码仓库的podSpec文件的仓库。</li>
+</ol>
+<h2 id="私有库原理"><a href="#私有库原理" class="headerlink" title="私有库原理"></a>私有库原理</h2><p>源文件仓库很容易理解，就是源代码仓库，当一个team体量大了之后会有很多源代码仓库。</p>
+<p>spec仓库相当于是一个版本管理仓库，我们使用CocoaPod源码仓库中会有spec文件，当我们修改spec文件，然后push到spec仓库中的时候，仓库就记录下了源码仓库的spec文件.长时间下来会有不同的源码仓库文件夹，文件夹中包含这个源码仓库的历史版本。</p>
+<p>如果我们的目标工程或者说主工程，直接用branch，或者commit作为依赖，那么是不需要第二种仓库的。</p>
+<p>使用CocoaPod管理，Spec是个非常重要的文件,这个文件管理着源代码库的基本信息和依赖关系。不同的历史版本依赖着不同的第三方库。</p>
+<h2 id="简单搭建私有库步骤"><a href="#简单搭建私有库步骤" class="headerlink" title="简单搭建私有库步骤"></a>简单搭建私有库步骤</h2><blockquote>
+<p>mac中已经安装cocoapod和git.并且有远程仓库的服务.</p>
+</blockquote>
+<ol>
+<li>创建源代码仓库</li>
+<li>设置remote地址</li>
+<li>设置源代码仓库的Spec文件,并且验证可用性</li>
+<li>创建spec仓库,并且拉代码到本地</li>
+<li>将源码仓库添加到spec仓库中</li>
+<li>更新源码仓库，将更新的内容同步到spec仓库中</li>
+</ol>
+<h3 id="创建源代码仓库"><a href="#创建源代码仓库" class="headerlink" title="创建源代码仓库"></a>创建源代码仓库</h3><p>在你需要的位置创建源代码仓库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"> cd ~&#x2F;Desktop  &#x2F;&#x2F;指向桌面文件夹</span><br><span class="line"></span><br><span class="line">pod lib create YourLib    &#x2F;&#x2F;pod快捷创建lib,你需要做一些选项，然后</span><br><span class="line"></span><br><span class="line">What platform do you want to use?? [ iOS &#x2F; macOS ]</span><br><span class="line"> &gt; iOS</span><br><span class="line"></span><br><span class="line">What language do you want to use?? [ Swift &#x2F; ObjC ]</span><br><span class="line"> &gt; Swift</span><br><span class="line"></span><br><span class="line">Would you like to include a demo application with your library? [ Yes &#x2F; No ]</span><br><span class="line"> &gt; Yes</span><br><span class="line"></span><br><span class="line">Which testing frameworks will you use? [ Quick &#x2F; None ]</span><br><span class="line"> &gt; None</span><br><span class="line"></span><br><span class="line">Would you like to do view based testing? [ Yes &#x2F; No ]</span><br><span class="line"> &gt; No</span><br></pre></td></tr></table></figure>
+<p>这样已经在Desktop中生成好了我们的工程。</p>
+<p>###添加远端设置remote地址<br>创建远程的仓库 记下repo的地址，下一步要更新到podspec文件的source中。<br><strong>创建git远端仓库有许多种，这边就不赘述了。总之达到目的即可</strong></p>
+<h3 id="配置源码仓库Spec文件"><a href="#配置源码仓库Spec文件" class="headerlink" title="配置源码仓库Spec文件"></a>配置源码仓库Spec文件</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">YourSDK</span><br><span class="line">├── Example</span><br><span class="line">│   ├── Podfile</span><br><span class="line">│   ├── Podfile.lock</span><br><span class="line">│   ├── Pods</span><br><span class="line">│   ├── Tests</span><br><span class="line">│   ├── YourSDK</span><br><span class="line">│   ├── YourSDK.xcodeproj</span><br><span class="line">│   └── YourSDK.xcworkspace</span><br><span class="line">├── LICENSE</span><br><span class="line">├── README.md</span><br><span class="line">├── YourSDK</span><br><span class="line">│   ├── Assets</span><br><span class="line">│   └── Classes</span><br><span class="line">├── YourSDK.podspec</span><br><span class="line">└── _Pods.xcodeproj -&gt; Example&#x2F;Pods&#x2F;Pods.xcodeproj</span><br></pre></td></tr></table></figure>
+<p>这是这个库的大体结构。我们在Classes中添加代码文件在Assets中添加资源。<br>现在Classes中有一个类ReplaceMe.swift,删除并且新增一个类</p>
+<p>写下你要的代码。因为是库，所以基本上类，属性都要加<code>public</code>关键字，否则无法识别。<br>接下来修改  YourSDK.podspec  文件</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Pod::Spec.new do |s|</span><br><span class="line">  s.name             &#x3D; &#39;YourSDK&#39;</span><br><span class="line">  s.version          &#x3D; &#39;0.1.0&#39;</span><br><span class="line">  s.summary          &#x3D; &#39;A short description of YourSDK.&#39;</span><br><span class="line"></span><br><span class="line">  s.description      &#x3D; &lt;&lt;-DESC</span><br><span class="line">TODO: Add long description of the pod here.</span><br><span class="line">                       DESC</span><br><span class="line"></span><br><span class="line">  s.homepage         &#x3D; &#39;https:&#x2F;&#x2F;github.com&#x2F;xxx&#x2F;YourSDK&#39;</span><br><span class="line">  s.license          &#x3D; &#123; :type &#x3D;&gt; &#39;MIT&#39;, :file &#x3D;&gt; &#39;LICENSE&#39; &#125;</span><br><span class="line">  s.author           &#x3D; &#123; &#39;xxx&#39; &#x3D;&gt; &#39;xxx@xxx.com&#39; &#125;</span><br><span class="line">  s.source           &#x3D; &#123; :git &#x3D;&gt; &#39;https:&#x2F;&#x2F;github.com&#x2F;xxx&#x2F;YourSDK.git&#39;, :tag &#x3D;&gt; s.version.to_s &#125;</span><br><span class="line">  s.swift_versions &#x3D; &#39;4.2&#39;</span><br><span class="line">  s.ios.deployment_target &#x3D; &#39;8.0&#39;</span><br><span class="line">  s.source_files &#x3D; &#39;YourSDK&#x2F;Classes&#x2F;**&#x2F;*&#39;</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<p>将<code>xxx</code>更新为你的信息。homepage和source更新成远端仓库。并且检查</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;使用 pod lib lint</span><br><span class="line">cd YourSDK</span><br><span class="line">pod lib lint</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;如果有问题，按照提示去解决Error，WARN。此处因为我的classes中没有文件为空pod，所以报错。</span><br><span class="line">-&gt; YourSDK (0.1.0)</span><br><span class="line">    - WARN  | summary: The summary is not meaningful.</span><br><span class="line">    - WARN  | url: The URL (https:&#x2F;&#x2F;github.com&#x2F;xxx&#x2F;YourSDK) is not reachable.</span><br><span class="line">    - ERROR | [iOS] file patterns: The &#96;source_files&#96; pattern did not match any file.</span><br><span class="line">    - NOTE  | xcodebuild:  note: Using new build system</span><br><span class="line">    - NOTE  | [iOS] xcodebuild:  note: Planning build</span><br><span class="line">    - NOTE  | [iOS] xcodebuild:  note: Constructing build description</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+<p>解决完Error，下面关联远端仓库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git remote add origin git@gitlab.xxxxx.com:xxx&#x2F;yoursdk.git</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;Initial commit&quot;</span><br><span class="line">git push -u origin master</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建Spec仓库"><a href="#创建Spec仓库" class="headerlink" title="创建Spec仓库"></a>创建Spec仓库</h3><p>在我们的远端创建一个仓库，按照cocoaPod的习惯，基本上是<code>http://gitlab.xxx.com:xxx/YourSpec.git </code> 样式.<br><strong>创建git远端仓库有许多种，这边就不赘述了。总之达到目的即可</strong></p>
+<h3 id="本地pod设置"><a href="#本地pod设置" class="headerlink" title="本地pod设置"></a>本地pod设置</h3><p>现在远端spec仓库已经存在，我们把仓库拉到本地</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;pod repo add [specName] [remoteSpec.git]</span><br><span class="line">&#x2F;&#x2F;例如</span><br><span class="line">pod repo add mysdk http:&#x2F;&#x2F;gitlab.xxx.com:xxx&#x2F;Spec.git</span><br><span class="line">pod repo  &#x2F;&#x2F;查看一下是不是添加成功了</span><br><span class="line"></span><br><span class="line">hzSpec</span><br><span class="line">- Type: git (master)</span><br><span class="line">- URL:  http:&#x2F;&#x2F;gitlab.xxxx.com:8088&#x2F;xxx&#x2F;Spec.git</span><br><span class="line">- Path: &#x2F;Users&#x2F;xxx&#x2F;.cocoapods&#x2F;repos&#x2F;hzSpec</span><br><span class="line"></span><br><span class="line">master</span><br><span class="line">- Type: git (master)</span><br><span class="line">- URL:  https:&#x2F;&#x2F;github.com&#x2F;CocoaPods&#x2F;Specs.git</span><br><span class="line">- Path: &#x2F;Users&#x2F;xxx&#x2F;.cocoapods&#x2F;repos&#x2F;master</span><br></pre></td></tr></table></figure>
+
+<h3 id="关联源代码仓库到Spec仓库"><a href="#关联源代码仓库到Spec仓库" class="headerlink" title="关联源代码仓库到Spec仓库"></a>关联源代码仓库到Spec仓库</h3><p>现在跳回到我们的源代码仓库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">cd ~&#x2F;Desktop&#x2F;YourSDK</span><br><span class="line">&#x2F;&#x2F;这一步是将YourSDK.podspec文件上传到spec上去</span><br><span class="line">pod repo push [specName] YourSDK.podspec</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;下面检测一下是否有配置问题，问题有几种Error必须解决，Warnings也最好解决，如果不想解决在命令后加入 --allow-warnings即可</span><br><span class="line">&#x2F;&#x2F;本地检测</span><br><span class="line">pod spec lint</span><br><span class="line">&#x2F;&#x2F;检测远程仓库问题</span><br><span class="line">pod search YourSDK</span><br></pre></td></tr></table></figure>
+<p>上述无问题环境就搭建完成了</p>
+<h3 id="更新源码仓库，并且更新到spec仓库"><a href="#更新源码仓库，并且更新到spec仓库" class="headerlink" title="更新源码仓库，并且更新到spec仓库"></a>更新源码仓库，并且更新到spec仓库</h3><p>如果我们对库进行了更新，要更新版本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pod repo push [specName] YourSDK.podspec </span><br><span class="line">pod repo update [specName] </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="一些tips"><a href="#一些tips" class="headerlink" title="一些tips"></a>一些tips</h3><ol>
+<li>当我们自己的库依赖于自己的其他库时，需要–source=YOUR_OWN_SPEC_REPO</li>
+<li>pod命令的提示非常友好，可以根据pod的提示来进行操作</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/10/20/%E7%94%9F%E4%BA%A7%E5%8A%9B%E5%B7%A5%E5%85%B7/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          快捷键系列
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>
