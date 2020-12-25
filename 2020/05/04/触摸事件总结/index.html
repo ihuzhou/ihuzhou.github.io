@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>iOS 触摸事件总结 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="iOS 触摸事件总结系统触摸事件生成传递 当手指触摸屏幕的时候,产生中断.IOKit.framework接受中断，并且封装成IOHIDEvent对象。 系统利用进程间通信将对象传递给SpringBoard.app,SpringBoard是iOS的系统app，主要就是iOS的桌面系统。它负责管理触摸事件的分发。 SpringBoard根据这个事件进行分发，当主页面是我们开发的app的时候，即分发给我">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 触摸事件总结">
+<meta property="og:url" content="http://example.com/2020/05/04/%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="iOS 触摸事件总结系统触摸事件生成传递 当手指触摸屏幕的时候,产生中断.IOKit.framework接受中断，并且封装成IOHIDEvent对象。 系统利用进程间通信将对象传递给SpringBoard.app,SpringBoard是iOS的系统app，主要就是iOS的桌面系统。它负责管理触摸事件的分发。 SpringBoard根据这个事件进行分发，当主页面是我们开发的app的时候，即分发给我">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-03T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-25T06:58:05.464Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="iOS, 触摸事件">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-触摸事件总结" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      iOS 触摸事件总结
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/05/04/%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E6%80%BB%E7%BB%93/" class="article-date">
+  <time datetime="2020-05-03T16:00:00.000Z" itemprop="datePublished">2020-05-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS-触摸事件总结"><a href="#iOS-触摸事件总结" class="headerlink" title="iOS 触摸事件总结"></a>iOS 触摸事件总结</h1><h2 id="系统触摸事件生成传递"><a href="#系统触摸事件生成传递" class="headerlink" title="系统触摸事件生成传递"></a>系统触摸事件生成传递</h2><ol>
+<li>当手指触摸屏幕的时候,产生中断.IOKit.framework接受中断，并且封装成IOHIDEvent对象。</li>
+<li>系统利用进程间通信将对象传递给SpringBoard.app,SpringBoard是iOS的系统app，主要就是iOS的桌面系统。它负责管理触摸事件的分发。</li>
+<li>SpringBoard根据这个事件进行分发，当主页面是我们开发的app的时候，即分发给我们的app。IOKit -&gt; SpringBoard -&gt; OurApp 这里面的数据传递都是进程间通信IPC</li>
+<li>app主线程的Runloop在不断循环中或者在睡眠中被唤醒处理系统的Source1事件，即开始响应这个事件。</li>
+<li>Source1是系统消息，传递过来的IOHIDEvent将交由Source0处理。</li>
+<li>source0中将IOHIDEvent转化成UIEvent，并且调用UIApplication中的sendEvent方法，确定谁是最佳响应者。<br>以上步骤就是一个手势生给我们app处理的具体步骤</li>
+</ol>
+<h2 id="UITouch"><a href="#UITouch" class="headerlink" title="UITouch"></a>UITouch</h2><ol>
+<li>一次触摸生成一个UITouch对象。多点触控生成多个UITouch对象</li>
+<li>多个手指先后触摸，根据算法判断是一个手势的多次点击，还是不同的两个手势</li>
+<li>每个Touch对象会存放一些信息，比如时间，位置，阶段等信息</li>
+<li>当手指离开屏幕一定时间，touch结束，对象释放</li>
+</ol>
+<h2 id="UIEvent"><a href="#UIEvent" class="headerlink" title="UIEvent"></a>UIEvent</h2><p>在触摸时间生成的阶段我们可以看到，最终我们的app是要接受并且处理UIEvent对象的。一个触摸便是一个UIEvent，因为一个触摸事件可能是多点触摸，会包含若干个UITouch对象。</p>
+<h2 id="UIResponder"><a href="#UIResponder" class="headerlink" title="UIResponder"></a>UIResponder</h2><p>每个能响应事件的都是一个<code>UIResponder</code>对象，如<code>UIView</code>，<code>UIApplication</code>，<code>AppDelegate</code>，<code>UIViewController</code>。他们都可以处理事件<br><code>touchesBegin</code>,<code>touchMoved</code>,<code>touchCancelled</code>,<code>touchEnded</code></p>
+<h2 id="寻找事件最佳响应者"><a href="#寻找事件最佳响应者" class="headerlink" title="寻找事件最佳响应者"></a>寻找事件最佳响应者</h2><p>当我们的app主线程Runloop调用Application的sendEvent的方法，已经走过了第一步事件的发送，第二部寻找最佳的事件响应者。<br>我们把app中的View想象成一个桌子上放着大大小小的千层饼。UIApplication就是桌面。Application想知道应该把事件交给哪个Responder对象处理，就要从千层饼的底层往上试。直到获得最终要去响应事件的对象。这个过程被称为hit test命中测试。</p>
+<h4 id="hit-test"><a href="#hit-test" class="headerlink" title="hit test"></a>hit test</h4><p>hit test 既是响应的传递者，也是应答者。沿以下路径进行事件传递:Application -&gt; UIWindow -&gt; view -&gt; childView。主要做两件事</p>
+<ol>
+<li>本身是否可以响应事件？ userInterfaceEnabled = false不行，隐藏不行，alpha 小于0.01也不行。当然也需要在触控范围内</li>
+<li>如果不能响应返回nil</li>
+<li>如果能响应，没有子View传给自己，如果有则递归给子View进行hit test。</li>
+</ol>
+<h2 id="响应链"><a href="#响应链" class="headerlink" title="响应链"></a>响应链</h2><p>根据寻找最高优先级的响应者的逻辑，我们能得到从UIWindow 到 hit tested-view的过程获得整个链路的路径。如 UIWindow -&gt; UIViewController -&gt; UIView -&gt; UIView。这个最高优先级的响应者对这个事件有着绝对的控制权，可以决定是否独吞这个事件，也可以将这个事件往下传递。这个过程就是响应链。与寻找响应者是逆向的。我们这里要记住一点，最高优先级的响应者不一定会响应事件。</p>
+<h4 id="响应者"><a href="#响应者" class="headerlink" title="响应者"></a>响应者</h4><p>响应者根据响应链的顺序来处理事件。而处理事件就是是否重写UIResponder中的方法。</p>
+<ol>
+<li>不重写。不响应事件，将事件传递给nextResponder</li>
+<li>重写。不调用<code>super.touchBegin</code>。完全自己响应事件</li>
+<li>重写。调用<code>super.touchBegin</code>，自己响应，也让nextResponder响应</li>
+</ol>
+<h2 id="复杂事件处理-UIResponder-UIControl-UIGesture-Recognizer"><a href="#复杂事件处理-UIResponder-UIControl-UIGesture-Recognizer" class="headerlink" title="复杂事件处理 UIResponder UIControl UIGesture Recognizer"></a>复杂事件处理 UIResponder UIControl UIGesture Recognizer</h2><ol>
+<li>更高优先级的手势识别器。Window在将事件传递给hit tested-view之前会优先给手势识别器识别。如果能识别，就取消hit-tested view的事件响应。反之hit-tested view响应。</li>
+<li>UIControl比父视图上的手势识别器有更高的优先级，同层级还是UIGesture Recognizer更高。原因是因为UIControl本质上还是UIResponder，只不过UIControl会阻止父视图上的手势识别器识别。当然这仅限于系统UIControl，自定义UIControl并无此作用。</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/07/09/iOS%E9%94%81/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          iOS锁小记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/02/21/Code%20Review%E6%B5%81%E7%A8%8B%E6%A2%B3%E7%90%86/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Code Review流程梳理</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

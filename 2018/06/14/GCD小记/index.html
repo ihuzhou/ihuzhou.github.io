@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>GCD 使用小记 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="GCD 使用小记GCD（grand center dispatch）MacOS&#x2F;iOS 中gcd对于线程的管理可谓是方便极了。gcd不是线程，也不是线程的封装。而是一个对线程管理的库。它让我们忘掉繁杂的线程管理而专注于业务。gcd的本质就是FIFO的将任务交给指定的队列。  Dispatch Groups        &#x2F;&#x2F; coordinate groups of queues Semaphor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GCD 使用小记">
+<meta property="og:url" content="http://example.com/2018/06/14/GCD%E5%B0%8F%E8%AE%B0/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="GCD 使用小记GCD（grand center dispatch）MacOS&#x2F;iOS 中gcd对于线程的管理可谓是方便极了。gcd不是线程，也不是线程的封装。而是一个对线程管理的库。它让我们忘掉繁杂的线程管理而专注于业务。gcd的本质就是FIFO的将任务交给指定的队列。  Dispatch Groups        &#x2F;&#x2F; coordinate groups of queues Semaphor">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2018-06-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-25T09:19:30.386Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="gcd,iOS">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-GCD小记" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      GCD 使用小记
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2018/06/14/GCD%E5%B0%8F%E8%AE%B0/" class="article-date">
+  <time datetime="2018-06-13T16:00:00.000Z" itemprop="datePublished">2018-06-14</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="GCD-使用小记"><a href="#GCD-使用小记" class="headerlink" title="GCD 使用小记"></a>GCD 使用小记</h1><h2 id="GCD（grand-center-dispatch）"><a href="#GCD（grand-center-dispatch）" class="headerlink" title="GCD（grand center dispatch）"></a>GCD（grand center dispatch）</h2><p>MacOS/iOS 中gcd对于线程的管理可谓是方便极了。gcd不是线程，也不是线程的封装。而是一个对线程管理的库。它让我们忘掉繁杂的线程管理而专注于业务。gcd的本质就是FIFO的将任务交给指定的队列。</p>
+<ul>
+<li>Dispatch Groups        // coordinate groups of queues</li>
+<li>Semaphores             // traditional counting Semaphores</li>
+<li>Barriers               // synchronize tasks in a given concurrent queue</li>
+<li>Dispatch Sources       // event handling for low-level events</li>
+<li>Dispatch I/O           // file descriptor–based operations</li>
+<li>Dispatch Data Buffers  // memory-based data buffer</li>
+</ul>
+<h4 id="队列"><a href="#队列" class="headerlink" title="队列"></a>队列</h4><p>gcd给我们一个队列的认识。队列分为2种，一种是串行，一种是并行。<br>串行队列:给串行队列按照FIFO顺序提交任务，任务会一个一个的执行，会按照FIFO的顺序输出。<br>并行队列也会按照FIFO的顺序去提交任务，但是跟串行队列不一样，并行队列可以创建新的线程去执行任务。无法保证任务输出的顺序<br>主队列是特殊的串行队列。UI任务必须要在主线程上执行。主线程与Runloop配合。主线程上要避免复杂的执行，保证UI任务的执行。</p>
+<h4 id="同步方法与异步方法"><a href="#同步方法与异步方法" class="headerlink" title="同步方法与异步方法"></a>同步方法与异步方法</h4><p>给队列添加任务的方式有2种。<br><code>async</code>:异步提交一个任务然后迅速返回不等任务结束。<br><code>sync</code> :同步提交一个任务等待任务完成才返回。<br>如果我们在主队列中调用主队列的同步方法会造成崩溃，原因就是串行队列无法完成队列末尾的任务。</p>
+<p>异步方法:<code>async</code>,<code>after</code>,<code>apply</code><br>同步方法:<code>once</code>, <code>sync</code></p>
+<h4 id="主线程异步修改UI"><a href="#主线程异步修改UI" class="headerlink" title="主线程异步修改UI"></a>主线程异步修改UI</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (void)updateUI &#123;</span><br><span class="line">    dispatch_async(dispatch_get_main_queue(), ^&#123;</span><br><span class="line">        NSLog(@&quot;update UI&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="延迟执行任务"><a href="#延迟执行任务" class="headerlink" title="延迟执行任务"></a>延迟执行任务</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (void)delayTask &#123;</span><br><span class="line">    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^&#123;</span><br><span class="line">        NSLog(@&quot;dispatch after 2 secs&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="once单例"><a href="#once单例" class="headerlink" title="once单例"></a>once单例</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (void)once &#123;</span><br><span class="line">    static dispatch_once_t once;</span><br><span class="line">    dispatch_once(&amp;once, ^&#123;</span><br><span class="line">       &#x2F;&#x2F;不管调用多少次，只会执行一次，单例模板</span><br><span class="line">        NSLog(@&quot;only once&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="apply-异步循环执行"><a href="#apply-异步循环执行" class="headerlink" title="apply 异步循环执行"></a>apply 异步循环执行</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">- (void)apply&#123;</span><br><span class="line">    dispatch_apply(3, dispatch_get_global_queue(0, 0), ^(size_t t) &#123;</span><br><span class="line">        if(t &#x3D;&#x3D; 1) &#123;</span><br><span class="line">            for(int i &#x3D; 0;i&lt;5;i++) &#123;</span><br><span class="line">                NSLog(@&quot;%d&quot;,i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        else &#123;</span><br><span class="line">            NSLog(@&quot;---&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="创建一个队列"><a href="#创建一个队列" class="headerlink" title="创建一个队列"></a>创建一个队列</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">- (void)createDispatchLabel &#123;</span><br><span class="line">    dispatch_queue_t someQueue &#x3D; dispatch_queue_create(&quot;huzhou&quot;, nil);</span><br><span class="line">    dispatch_async(someQueue, ^&#123;</span><br><span class="line">        NSLog(@&quot;%s&quot;,dispatch_queue_get_label(someQueue));</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="semaphore简介"><a href="#semaphore简介" class="headerlink" title="semaphore简介"></a>semaphore简介</h4><p>gcd的信号量是控制访问资源的方式。当多任务同时访问有限资源时，我们不能都满足，因为可能会造成获取数据不准确等情况。使用信号量主要有几个步骤</p>
+<ol>
+<li>创建信号量,dispatch_semaphore_create(2)比如创建一个资源数为2的信号量。也就是同时可以有2个任务可以访问资源。</li>
+<li>一个任务在访问资源信号量资源之前需要调用<code>dispatch_semaphore_wait(mySemaphore, DISPATCH_TIME_FOREVER);</code>。这里的意思就是，任务在排队等待调用资源，如果有空余资源，会执行任务。如果没有空余资源，任务会处于等待状态。</li>
+<li>执行完任务，需要释放信号量。<code>dispatch_semaphore_signal(mySemaphore);</code></li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">- (void)useSemaphore &#123;</span><br><span class="line">    &#x2F;&#x2F;创建一个容量为3的信号量</span><br><span class="line">    mySemaphore &#x3D; dispatch_semaphore_create(2);</span><br><span class="line">    dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        [self semaphoreTaskOne];</span><br><span class="line">    &#125;);</span><br><span class="line">    dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        [self semaphoreTaskTwo];</span><br><span class="line">    &#125;);</span><br><span class="line">    dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        [self semaphoreTaskThree];</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)semaphoreTaskOne &#123;</span><br><span class="line">    dispatch_semaphore_wait(mySemaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    sleep(3);</span><br><span class="line">    NSLog(@&quot;do one&quot;);</span><br><span class="line">    dispatch_semaphore_signal(mySemaphore);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)semaphoreTaskTwo &#123;</span><br><span class="line">    dispatch_semaphore_wait(mySemaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    sleep(3);</span><br><span class="line">    NSLog(@&quot;do two&quot;);</span><br><span class="line">    dispatch_semaphore_signal(mySemaphore);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)semaphoreTaskThree &#123;</span><br><span class="line">    dispatch_semaphore_wait(mySemaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">    sleep(3);</span><br><span class="line">    NSLog(@&quot;do three&quot;);</span><br><span class="line">    dispatch_semaphore_signal(mySemaphore);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Dispatch-Groups使用"><a href="#Dispatch-Groups使用" class="headerlink" title="Dispatch Groups使用"></a>Dispatch Groups使用</h4><p>我们把一些异步任务组成组合，当所有的任务完成了才触发下一步的任务。<br>举个例子，如果我一个页面需要异步调用a,b两个接口，结合ab两个接口的数据才能进行ui的更新。那么我们就可以使用group了。下面是主要步骤</p>
+<ol>
+<li>创建<code>dispatch_group_t</code></li>
+<li>使用<code>dispatch_group_async</code>（下面例子中的1，3块）或者是<code>dispatch_group_enter</code>，<code>dispatch_group_leave(group);</code>组合（下面的例子中的第二块）。</li>
+<li>收集group信息。当group任务都部署完成了，我们需要一个方法来明确group任务都做完了，可以进行下一步骤了。主要有两种方式<code>dispatch_group_notify</code>和<code>dispatch_group_wait</code>。<code>dispatch_group_notify</code>是不阻塞当前线程，用block来执行group都执行完后的动作。而<code>dispatch_group_wait</code>方法阻塞当前线程直到group任务都完成。下面的例子中可以看到如果使用<code>dispatch_group_notify</code>方法<code> NSLog(@&quot;notify 后&quot;);</code>指令会很快执行。而使用<code>dispatch_group_wait</code>方法，<code> NSLog(@&quot;notify 后&quot;);</code>会在所有任务之后执行。</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">- (void)dispatchGroupWait &#123;</span><br><span class="line">    dispatch_group_t group &#x3D; dispatch_group_create();</span><br><span class="line">    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        sleep(1);</span><br><span class="line">        NSLog(@&quot;do something 1&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">    dispatch_group_enter(group);</span><br><span class="line">    dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        sleep(2);</span><br><span class="line">        NSLog(@&quot;do something 2&quot;);</span><br><span class="line">        dispatch_group_leave(group);</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        sleep(3);</span><br><span class="line">        NSLog(@&quot;do something 3&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">    NSLog(@&quot;notify 前&quot;);</span><br><span class="line">    dispatch_group_notify(group, dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">        NSLog(@&quot;任务1，2，3 finish&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">&#x2F;&#x2F;    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);</span><br><span class="line">    NSLog(@&quot;notify 后&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="dispatch-barrier-async"><a href="#dispatch-barrier-async" class="headerlink" title="dispatch_barrier_async"></a>dispatch_barrier_async</h4><p>barrier顾名思义栅栏，是给队列中的任务以一个阻碍的作用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">- (void)barrierTest &#123;</span><br><span class="line">    &#x2F;&#x2F;barrier只作用在自创建的队列里</span><br><span class="line">    dispatch_queue_t queue &#x3D; dispatch_queue_create(&quot;huzhou 2&quot;, nil);</span><br><span class="line">    dispatch_async(queue, ^&#123;</span><br><span class="line">        for(int i &#x3D; 0;i &lt; 10;i ++) &#123;</span><br><span class="line">            NSLog(@&quot;barrier 之前 %d&quot;,i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    dispatch_barrier_sync(queue, ^&#123;</span><br><span class="line">        NSLog(@&quot;---- barrier --- &quot;);</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    dispatch_async(queue, ^&#123;</span><br><span class="line">        for(int i &#x3D; 0;i &lt; 10;i ++) &#123;</span><br><span class="line">            NSLog(@&quot;barrier 之后 %d&quot;,i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Dispatch-Source"><a href="#Dispatch-Source" class="headerlink" title="Dispatch Source"></a>Dispatch Source</h4><p>用来处理一些系统底层的事件。<br>Timer Dispatch Source：定时调度源。<br>Signal Dispatch Source：监听UNIX信号调度源，比如监听代表挂起指令的SIGSTOP信号。<br>Descriptor Dispatch Source：监听文件相关操作和Socket相关操作的调度源。<br>Process Dispatch Source：监听进程相关状态的调度源。<br>Mach port Dispatch Source：监听Mach相关事件的调度源。<br>Custom Dispatch Source：监听自定义事件的调度源。<br>可以针对这些类型进行监听，比如监听Timer返回，然后响应事件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">- (void)dispatchSourceTimer &#123;</span><br><span class="line">    dispatch_source_t sourceTime &#x3D; dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(0, 0));</span><br><span class="line">    if(sourceTime) &#123;</span><br><span class="line">        dispatch_time_t startTime  &#x3D; dispatch_time(DISPATCH_TIME_NOW, 0 * NSEC_PER_SEC);</span><br><span class="line">        dispatch_source_set_timer(sourceTime, startTime, 1 * NSEC_PER_SEC, 0);</span><br><span class="line">        __block int count &#x3D; 0;</span><br><span class="line">        dispatch_source_set_event_handler(sourceTime, ^&#123;</span><br><span class="line">            NSLog(@&quot;source time &quot;);</span><br><span class="line">            count ++;</span><br><span class="line">            if (count &#x3D;&#x3D; 5) &#123;</span><br><span class="line">                dispatch_cancel(sourceTime);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        dispatch_source_set_cancel_handler(sourceTime, ^&#123;</span><br><span class="line">            NSLog(@&quot;source time cancel&quot;);</span><br><span class="line">        &#125;);</span><br><span class="line">        dispatch_resume(sourceTime);</span><br><span class="line">    &#125;</span><br><span class="line">    mySource &#x3D; sourceTime;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Dispatch-I-O-amp-Dispatch-Data-Buffer"><a href="#Dispatch-I-O-amp-Dispatch-Data-Buffer" class="headerlink" title="Dispatch I/O &amp; Dispatch Data Buffer"></a>Dispatch I/O &amp; Dispatch Data Buffer</h4><p>读取大文件时，将文件分成合适的大小，然后用dispatch_io来进行读写。<br>目前未使用过，所以先放着。我们需要了解dispatch有这个功能。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>gcd让我们在使用多线程的时候更加注重业务，而非线程切换等操作。</li>
+<li>gcd给我们提供了2种队列。一种是串行队列，一种是并行队列，主队列是串行队列。串行队列会按照FIFO的顺序安排任务，然后按照FIFO输出。而并行队列按照FIFO顺序安排任务，不会确定执行完的顺序。</li>
+<li>对于队列有两种安排任务的方法。同步与异步。同步方法需要等待任务完成再返回。而异步方法不需要等待任务执行完就返回。</li>
+<li>以上3步已经确保了常规的任务调度流程。还要考虑一些特别的情况。</li>
+<li>如果需要保证一个任务只会被调用一次。那么就要使用<code>once</code>方法。</li>
+<li>如果要异步循环执行一些方法就可以使用<code>apply</code>方法。</li>
+<li>如果几个任务同属一个组，那么我们可以使用<code>group</code>来管理这些组员。</li>
+<li>当许多任务需要同时调用一个资源的时候，我们给资源一个信号量。当信号量大于0允许任务调用资源。否则任务等待信号量大于0才能调度资源。</li>
+<li>之前说同一个组，可以使用group管理任务。如果任务不同组，需要等待它们完成才能进行一定的操作，我们可以使用<code>barrier</code>。</li>
+<li>线程中，或者线程与线程之间会有一些消息的传递。gcd通过dispatch_source来监听消息，做一定的响应。</li>
+<li>gcd中<code>dispatch_io</code>可以用来进行读写调度。使用<code>dispatch_io</code>来使用基于流或者随机访问的语义管理文件描述符。</li>
+<li>gcd还通过 <code>dispatch data</code> 对象管理基于内存的数据缓冲区，并将其公开为连续的内存块。</li>
+</ol>
+<p><a href="media/15817769436621/GCDDemo.zip">GCDDemo</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/04/20/Cocoapod%E7%A7%81%E6%9C%89%E5%BA%93%E6%90%AD%E5%BB%BA/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Cocoapods私有库
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/12/12/iOS%E6%B8%B2%E6%9F%93%E5%B0%8F%E8%AE%B0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">iOS 渲染小记</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

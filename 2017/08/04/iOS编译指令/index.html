@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>iOS 编译指令小记 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="_attribute_\iOS开发中__attribute__是一个编译指令，他可以对特定的属性，变量，类型进行设置。达到一定的效果。 format__attribute((format(printf,2,3)))要求对printf函数符合格式。在OC中等同于__NSString__,NS_FORMAT_FUNCTION(2,3) __attribute__((constructor))这样写在一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 编译指令小记">
+<meta property="og:url" content="http://example.com/2017/08/04/iOS%E7%BC%96%E8%AF%91%E6%8C%87%E4%BB%A4/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="_attribute_\iOS开发中__attribute__是一个编译指令，他可以对特定的属性，变量，类型进行设置。达到一定的效果。 format__attribute((format(printf,2,3)))要求对printf函数符合格式。在OC中等同于__NSString__,NS_FORMAT_FUNCTION(2,3) __attribute__((constructor))这样写在一">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2017-08-03T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-25T10:15:29.626Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="attribute, iOS">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-iOS编译指令" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      iOS 编译指令小记
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/08/04/iOS%E7%BC%96%E8%AF%91%E6%8C%87%E4%BB%A4/" class="article-date">
+  <time datetime="2017-08-03T16:00:00.000Z" itemprop="datePublished">2017-08-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="attribute"><a href="#attribute" class="headerlink" title="_attribute_\"></a><em>_attribute_\</em></h1><p>iOS开发中__attribute__是一个编译指令，他可以对特定的属性，变量，类型进行设置。达到一定的效果。</p>
+<h2 id="format"><a href="#format" class="headerlink" title="format"></a>format</h2><p><code>__attribute((format(printf,2,3)))</code>要求对printf函数符合格式。在OC中等同于<code>__NSString__</code>,<code>NS_FORMAT_FUNCTION(2,3)</code></p>
+<h2 id="attribute-constructor"><a href="#attribute-constructor" class="headerlink" title="__attribute__((constructor))"></a><code>__attribute__((constructor))</code></h2><p>这样写在一个函数前面，确保函数在main方法前执行。跟<code>+ load()</code>方法相似</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__attribute__((constructor))</span><br><span class="line">static void beforMain() &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="attribute-cleanup"><a href="#attribute-cleanup" class="headerlink" title="__attribute__((cleanup))"></a><code>__attribute__((cleanup))</code></h2><p>修饰的变量在作用于结束的时候调用cleanup方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static void stringCleanUp(__strong NSString **string) &#123;</span><br><span class="line">    NSLog(@&quot;%@&quot;, *string);</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F; 在某个方法中：</span><br><span class="line">&#123;</span><br><span class="line">    __strong NSString *string __attribute__((cleanup(stringCleanUp))) &#x3D; @&quot;sunnyxx&quot;;</span><br><span class="line">&#125; &#x2F;&#x2F; 当运行到这个作用域结束时，自动调用stringCleanUp</span><br></pre></td></tr></table></figure>
+<p><a href="">http://blog.sunnyxx.com/2014/09/15/objc-attribute-cleanup/</a></p>
+<p>参考：<a href="">https://www.jianshu.com/p/965f6f903114</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/12/12/iOS%E6%B8%B2%E6%9F%93%E5%B0%8F%E8%AE%B0/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          iOS 渲染小记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/07/20/SwiftJSON/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">SwiftJSON 源码解读</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

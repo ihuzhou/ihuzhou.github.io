@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>iOS锁小记 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="iOS 锁什么是锁锁的本质是一种操作系统资源，是用来控制资源获取的方式。获得锁就是获得了资源的访问，失去锁就是失去了资源的访问。加锁的区域相当于结界，锁就是钥匙。 为什么要锁计算机中关于线程安全方面最主要考虑的因素是不同的线程同一时间修改同一数据引起的。比如有一个int值为10.现在有5个线程分别想修改它为1，2，3，4，5那么最后这个int会被改成什么是不确定的。这样我们就失去了对这个数据的控制">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS锁小记">
+<meta property="og:url" content="http://example.com/2020/07/09/iOS%E9%94%81/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="iOS 锁什么是锁锁的本质是一种操作系统资源，是用来控制资源获取的方式。获得锁就是获得了资源的访问，失去锁就是失去了资源的访问。加锁的区域相当于结界，锁就是钥匙。 为什么要锁计算机中关于线程安全方面最主要考虑的因素是不同的线程同一时间修改同一数据引起的。比如有一个int值为10.现在有5个线程分别想修改它为1，2，3，4，5那么最后这个int会被改成什么是不确定的。这样我们就失去了对这个数据的控制">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-07-08T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-25T09:15:32.085Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="iOS, 锁">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-iOS锁" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      iOS锁小记
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/07/09/iOS%E9%94%81/" class="article-date">
+  <time datetime="2020-07-08T16:00:00.000Z" itemprop="datePublished">2020-07-09</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="iOS-锁"><a href="#iOS-锁" class="headerlink" title="iOS 锁"></a>iOS 锁</h1><h2 id="什么是锁"><a href="#什么是锁" class="headerlink" title="什么是锁"></a>什么是锁</h2><p>锁的本质是一种操作系统资源，是用来控制资源获取的方式。获得锁就是获得了资源的访问，失去锁就是失去了资源的访问。加锁的区域相当于结界，锁就是钥匙。</p>
+<h2 id="为什么要锁"><a href="#为什么要锁" class="headerlink" title="为什么要锁"></a>为什么要锁</h2><p>计算机中关于线程安全方面最主要考虑的因素是不同的线程同一时间修改同一数据引起的。比如有一个int值为10.现在有5个线程分别想修改它为1，2，3，4，5那么最后这个int会被改成什么是不确定的。这样我们就失去了对这个数据的控制。所以我们谈线程安全最主要的目的就是让我们的输出可控。那么如何做到可控呢？就是保证从数据开始修改直到修改结束都不能被打扰。锁的用途便在这里。</p>
+<h2 id="锁的种类"><a href="#锁的种类" class="headerlink" title="锁的种类"></a>锁的种类</h2><p>如果让我们保证数据从开始修改到修改结束都不能被打扰，只能被一个线程修改。那么其他线程只能等，怎么等是关键。<br>举个通俗的例子，约会等人的时候，有的人会走来走去踱步，反复看手机，确认时间。还有的人就坐在那里小憩，淡定安逸。</p>
+<ol>
+<li>一直走来走去反复看手机确认时间的人类似<strong>自旋锁</strong>。在还没获得资源的时候，一直循环是否锁已经被释放，可以去获得资源了。优点就是快，肯定比睡着等的人能快点看到约会对象。但是就是耗费能量，毕竟一直在循环着。这样忙等待的线程还有一个问题就是线程还是可以做别的事情，如果线程再上一把锁，那就有可能造成死锁了。</li>
+<li>确认资源还不能活去就去睡的类似<strong>互斥锁</strong>。互斥锁会将线程处于等待的位置，让CPU帮别的，一旦资源的锁释放了，线程会被唤醒去调用资源。</li>
+<li><strong>读写锁</strong>从线程的状态来看算是一种互斥锁。但因为不控制读取，控制写，也降低了使用成本。</li>
+<li><strong>递归锁</strong>允许同一个线程反复加锁。非递归锁反复在一个线程上加会造成死锁。</li>
+<li><strong>信号量</strong>gcd中信号量和锁有些区别，信号量可以控制获取资源的线程数。</li>
+</ol>
+<h2 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h2><p>线程因为竞争资源而陷入到永久的等待状态，若无外力作用，无法解开。</p>
+<h2 id="iOS中用到的锁"><a href="#iOS中用到的锁" class="headerlink" title="iOS中用到的锁"></a>iOS中用到的锁</h2><h4 id="Dispatch-semaphore"><a href="#Dispatch-semaphore" class="headerlink" title="Dispatch semaphore"></a>Dispatch semaphore</h4><p>gcd的信号量 </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">- (void)semaphoreMethod &#123;</span><br><span class="line">    dispatch_semaphore_t semaphore &#x3D; dispatch_semaphore_create(1);</span><br><span class="line">    for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">         dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">             dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);</span><br><span class="line">             [[Seller shared]sellToCustoms];</span><br><span class="line">             dispatch_semaphore_signal(semaphore);</span><br><span class="line">         &#125;);</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="dispatch-sync"><a href="#dispatch-sync" class="headerlink" title="dispatch sync"></a>dispatch sync</h4><p>创建一个串行队列，在串行队列中添加任务，任务按照指定的顺序输出。不会出现抢占资源的情况。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dispatch_queue_t queue &#x3D; dispatch_queue_create(&quot;hz&quot;, NULL);</span><br><span class="line"> for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">    dispatch_sync(queue, ^&#123;</span><br><span class="line">        [[Seller shared]sellToCustoms];</span><br><span class="line">    &#125;);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="Dispatch-Barrier"><a href="#Dispatch-Barrier" class="headerlink" title="Dispatch Barrier"></a>Dispatch Barrier</h4><p>作为阻塞线程的一种方法，利用<code>dispatch_barrier_sync</code>可以达到控制资源的目的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (void)barrierMethod &#123;</span><br><span class="line">      for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">          dispatch_barrier_sync(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">              [[Seller shared]sellToCustoms];</span><br><span class="line">          &#125;);</span><br><span class="line">       &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="synchronized"><a href="#synchronized" class="headerlink" title="synchronized"></a>synchronized</h4><p>synchronized实际上是对pthread_metux递归锁的封装</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (void)synchronizedMethod &#123;</span><br><span class="line">     for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">          dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">              @synchronized ([self class]) &#123;</span><br><span class="line">                  [[Seller shared]sellToCustoms];</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;);</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="un-fair-lock"><a href="#un-fair-lock" class="headerlink" title="un_fair_lock"></a>un_fair_lock</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (void)unfairLockMethod &#123;</span><br><span class="line">    for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">       dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">           os_unfair_lock_lock(&amp;self-&gt;_unfairLock);</span><br><span class="line">           [[Seller shared]sellToCustoms];</span><br><span class="line">           os_unfair_lock_unlock(&amp;self-&gt;_unfairLock);</span><br><span class="line">       &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="NSLock"><a href="#NSLock" class="headerlink" title="NSLock"></a>NSLock</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">- (void)nslockMethod &#123;</span><br><span class="line">&#x2F;&#x2F;    NSLock *lock &#x3D; [[NSLock alloc]init];</span><br><span class="line">    for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">          dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">              [self.nslock lock];</span><br><span class="line">              [[Seller shared]sellToCustoms];</span><br><span class="line">              [self.nslock unlock];</span><br><span class="line">          &#125;);</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="pthread-mutex-t"><a href="#pthread-mutex-t" class="headerlink" title="pthread_mutex_t"></a>pthread_mutex_t</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">- (void)pthreadMutexMethod &#123;</span><br><span class="line"></span><br><span class="line">    static pthread_mutex_t lock;</span><br><span class="line">    pthread_mutex_init(&amp;lock, NULL);</span><br><span class="line">    for(int i &#x3D; 0;i&lt;10;i++) &#123;</span><br><span class="line">        dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">            pthread_mutex_lock(&amp;lock);</span><br><span class="line">            [[Seller shared]sellToCustoms];</span><br><span class="line">            pthread_mutex_unlock(&amp;lock);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="NSCondition"><a href="#NSCondition" class="headerlink" title="NSCondition"></a>NSCondition</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">- (void)conditionMethod &#123;</span><br><span class="line">    NSCondition *condition &#x3D; [[NSCondition alloc]init];</span><br><span class="line">    for(int i &#x3D; 0;i &lt; 10 ;i++) &#123;</span><br><span class="line">        dispatch_async(dispatch_get_global_queue(0, 0), ^&#123;</span><br><span class="line">            [condition lock];</span><br><span class="line">            [[Seller shared]sellToCustoms];</span><br><span class="line">            [condition unlock];</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>锁的由来是因为多线程，因为多线程能做到不同的线程同时取获取一个资源，对这个资源进行修改。这样数据就不可控了，所以才有线程安全这样的命题，也才有了锁。</li>
+<li>锁是一种系统资源，让高层的应用在多线程下，安全的控制资源的分配。</li>
+<li>锁有一些基本的操作,<code>lock</code> <code>unlock</code> 。在获取资源之前加锁，在获取资源之后解锁，产生一个临界区，区域中的操作会根据系统的分配来进行操作。同时也有<code>wait</code>，<code>signal</code>操作。<code>wait</code>类似于<code>lock</code>，<code>signal</code>类似<code>unlock</code></li>
+<li>锁根据对线程的操作来分，有<strong>互斥锁</strong>和<strong>自旋锁</strong>。加互斥锁的线程会让线程挂起等待系统调度获得锁。而自旋锁会让线程处于busy-waiting的状态，线程不断的循环看是否获得了锁。</li>
+<li>比较底层的自旋锁<code>OSSpinLock</code>,但是因为自旋锁的忙等待，容易产生死锁的问题。还是慎用为好。</li>
+<li>互斥锁就比较多了，底层有<code>pthread_metux_t</code>,然后又有<code>NSLock</code>，<code>NSRecursiveLock</code>，<code>NSCondition</code>等。</li>
+<li>gcd中有几种方式能做到锁的效果。首先是信号量，我觉得信号量是一种高级锁，因为可以设置有限资源的数量，而不是给若干个资源加上若干个锁。<code>dispatch_barrier_sync</code>栅栏方法可以做到不同线程按顺序访问枷锁资源。当然也可以gcd创建串行队列，然后同步添加方法。</li>
+<li><strong>递归锁</strong>允许同一个线程反复加锁。一般的锁适用于不同线程之间，强行加在同一个线程中会出现死锁。<code>synchronized</code>是对<code>pthread_metux_t</code>封装的递归锁。使用方便。</li>
+<li>在使用锁的时候要万分小心。因为使用不当容易造成死锁或者增加运算量。</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/10/20/%E7%94%9F%E4%BA%A7%E5%8A%9B%E5%B7%A5%E5%85%B7/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          快捷键系列
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/05/04/%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E6%80%BB%E7%BB%93/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">iOS 触摸事件总结</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

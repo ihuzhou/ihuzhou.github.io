@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>SwiftJSON 源码解读 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="SwiftJSON 源码解析SwiftJson通过对JSONSerialization对象进行加工，包装成常用的对象给user使用。 源码逻辑步骤  错误枚举 定义JSON对象中包含的类型，比如有array类型，string类型可以被解析 定义结构体JSON，初始化方法等 解析unwrapped方法，将JSONSerialization对象递归解构成JSON对象的嵌套 定义一个实现了Compara">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SwiftJSON 源码解读">
+<meta property="og:url" content="http://example.com/2017/07/20/SwiftJSON/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="SwiftJSON 源码解析SwiftJson通过对JSONSerialization对象进行加工，包装成常用的对象给user使用。 源码逻辑步骤  错误枚举 定义JSON对象中包含的类型，比如有array类型，string类型可以被解析 定义结构体JSON，初始化方法等 解析unwrapped方法，将JSONSerialization对象递归解构成JSON对象的嵌套 定义一个实现了Compara">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2017-07-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-25T10:14:46.473Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="swift, JSON">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-SwiftJSON" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      SwiftJSON 源码解读
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/07/20/SwiftJSON/" class="article-date">
+  <time datetime="2017-07-19T16:00:00.000Z" itemprop="datePublished">2017-07-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="SwiftJSON-源码解析"><a href="#SwiftJSON-源码解析" class="headerlink" title="SwiftJSON 源码解析"></a>SwiftJSON 源码解析</h1><p>SwiftJson通过对JSONSerialization对象进行加工，包装成常用的对象给user使用。</p>
+<p>源码逻辑步骤</p>
+<ol>
+<li>错误枚举</li>
+<li>定义JSON对象中包含的类型，比如有array类型，string类型可以被解析</li>
+<li>定义结构体JSON，初始化方法等</li>
+<li>解析unwrapped方法，将JSONSerialization对象递归解构成JSON对象的嵌套</li>
+<li>定义一个实现了Comparable的Index枚举</li>
+<li>JSON实现Collection，用上面的Index作为索引，如startIndex，endIndex</li>
+<li>定义JSONKey枚举，让String，Int也可以通过下标来获得</li>
+<li>实现JSON的subscript方法</li>
+<li>实现字面量创建对象，如JSON.init(“&quot;123&quot;:&quot;456”&quot;)</li>
+<li>实现RawRepresentable协议，让JSON对象可以转化成原始的json字符串或者data</li>
+<li>获取json对象中具体的对象，如<code>json.arrayObject </code></li>
+<li>实现JSON对象的<code>Comparable</code>协议</li>
+<li>实现JSON的<code>Codable</code>协议</li>
+</ol>
+<p>学习总结:</p>
+<ol>
+<li>对协议的了如指掌。SwiftJson本身并没有什么复杂的设计。其本身就是对JSONSerialization对象的封装。</li>
+<li>了解了一些系统协议的使用方式Comparable，Collection, ExpressibleByStringLiteral,RawRepresentable,Codable</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/08/04/iOS%E7%BC%96%E8%AF%91%E6%8C%87%E4%BB%A4/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          iOS 编译指令小记
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/04/08/Runloop/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Runloop小记</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

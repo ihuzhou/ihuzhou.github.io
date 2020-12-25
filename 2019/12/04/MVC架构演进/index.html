@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>MVC MVP MVVM模式演进 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="关于MVC MVP MVVM模式演进最原始的MVC最原始的MVC是model负责数据 View负责视图 Controller负责接收View的改变原始的MVC，Model，View，Controller3者之间相互配合。但是由于3个实体联系紧密，没办法分离。 iOS的MVC很长时间看白胡子老头的MVC我都诧异了，这跟原始的MVC不是一个东西。如图所示iOS的MVC框架将Model，Controll">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MVC MVP MVVM模式演进">
+<meta property="og:url" content="http://example.com/2019/12/04/MVC%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="关于MVC MVP MVVM模式演进最原始的MVC最原始的MVC是model负责数据 View负责视图 Controller负责接收View的改变原始的MVC，Model，View，Controller3者之间相互配合。但是由于3个实体联系紧密，没办法分离。 iOS的MVC很长时间看白胡子老头的MVC我都诧异了，这跟原始的MVC不是一个东西。如图所示iOS的MVC框架将Model，Controll">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://i.imgur.com/xcuJKgC.jpg">
+<meta property="og:image" content="https://i.imgur.com/Gsabxb4.jpg">
+<meta property="og:image" content="https://i.imgur.com/mErjGPA.jpg">
+<meta property="og:image" content="https://i.imgur.com/fHm3pzB.jpg">
+<meta property="og:image" content="https://i.imgur.com/ZZDJcOy.jpg">
+<meta property="article:published_time" content="2019-12-03T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-25T08:02:15.443Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="MVC,iOS,MVVM,MVP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.imgur.com/xcuJKgC.jpg">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-MVC架构演进" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      MVC MVP MVVM模式演进
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2019/12/04/MVC%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B/" class="article-date">
+  <time datetime="2019-12-03T16:00:00.000Z" itemprop="datePublished">2019-12-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="关于MVC-MVP-MVVM模式演进"><a href="#关于MVC-MVP-MVVM模式演进" class="headerlink" title="关于MVC MVP MVVM模式演进"></a>关于MVC MVP MVVM模式演进</h1><h2 id="最原始的MVC"><a href="#最原始的MVC" class="headerlink" title="最原始的MVC"></a>最原始的MVC</h2><p>最原始的MVC是model负责数据 View负责视图 Controller负责接收View的改变<br><img src="https://i.imgur.com/xcuJKgC.jpg"><br>原始的MVC，Model，View，Controller3者之间相互配合。但是由于3个实体联系紧密，没办法分离。</p>
+<h2 id="iOS的MVC"><a href="#iOS的MVC" class="headerlink" title="iOS的MVC"></a>iOS的MVC</h2><p><img src="https://i.imgur.com/Gsabxb4.jpg"><br>很长时间看白胡子老头的MVC我都诧异了，这跟原始的MVC不是一个东西。<br>如图所示iOS的MVC框架将Model，Controller，View分离。Controller可以更新模型，更新View。Model可以发出通知，View可以通过target-action代理等等返回。与原始MVC不同的是，Model和View是相互不交流的，一定程度上降低了耦合。<br><img src="https://i.imgur.com/mErjGPA.jpg"></p>
+<p>这样的MVC看似没啥问题。我们思索几个问题</p>
+<ol>
+<li>UIViewController我们充当的是View还是Controller</li>
+<li>业务逻辑在哪里做</li>
+<li>视图在哪里做，在哪里控制</li>
+<li>网络请求呢？<br>以上的答案可能都在UIViewController,其实iOS的MVC，Model是很简单的抽离了。但是View和Controller并没有分离，UIViewController是又当View又当Controller，既要管理Model，又要处理网络请求，更新视图，处理视图回调等等。</li>
+</ol>
+<h2 id="MVP"><a href="#MVP" class="headerlink" title="MVP"></a>MVP</h2><p>既然UIViewController又当View又当Controller，我们试着将这个模块拆分。而ViewController是继承在UIView之下的，我们把视图模块保留给UIViewController，命名一个新的东西叫Presenter。<br><img src="https://i.imgur.com/fHm3pzB.jpg"><br>Presenter更新模型和视图。也接受模型和视图的事件。<br>这其实与苹果的MVC非常相似，但是我们不要忘记那个庞大的UIViewController可是要处理视图布局的。它没有办法与视图分离，而MVP将Presenter不会有任何对视图的布局。Presneter持有视图，更新视图而已。<br>用代码展示了一段MVP的架构。</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> UIKit</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Person</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name:<span class="type">String</span></span><br><span class="line">    <span class="keyword">var</span> age:<span class="type">String</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">protocol</span> <span class="title">HelloView</span>: <span class="title">class</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">sayHello</span><span class="params">()</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">protocol</span> <span class="title">HelloViewPresenter</span> </span>&#123;</span><br><span class="line">    <span class="keyword">init</span>(<span class="number">_</span> view:<span class="type">HelloView</span>, <span class="number">_</span> person:<span class="type">Person</span>)</span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">showHello</span><span class="params">()</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HelloPresenter</span>:<span class="title">HelloViewPresenter</span> </span>&#123;</span><br><span class="line">    <span class="keyword">unowned</span> <span class="keyword">let</span> view:<span class="type">HelloView</span></span><br><span class="line">    <span class="keyword">let</span> model:<span class="type">Person</span></span><br><span class="line">    <span class="keyword">required</span> <span class="keyword">init</span>(<span class="number">_</span> view: <span class="type">HelloView</span>, <span class="number">_</span> person: <span class="type">Person</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.view = view</span><br><span class="line">        <span class="keyword">self</span>.model = person</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">showHello</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.view.sayHello()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyHelloView</span>:<span class="title">UIViewController</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> label:<span class="type">UILabel</span> = &#123;</span><br><span class="line">        <span class="keyword">let</span> label = <span class="type">UILabel</span>.<span class="keyword">init</span>()</span><br><span class="line">        <span class="keyword">return</span> label</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="built_in">lazy</span> <span class="keyword">var</span> button:<span class="type">UIButton</span> = &#123;</span><br><span class="line">        <span class="keyword">let</span> button = <span class="type">UIButton</span>.<span class="keyword">init</span>(type: .system)</span><br><span class="line">        button.addTarget(<span class="keyword">self</span>, action: #selector(didClick(<span class="number">_</span>:)), <span class="keyword">for</span>: .touchUpInside)</span><br><span class="line">        <span class="keyword">return</span> button</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> presenter:<span class="type">HelloViewPresenter?</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@objc</span> <span class="function"><span class="keyword">func</span> <span class="title">didClick</span><span class="params">(<span class="number">_</span> sender:<span class="keyword">Any</span>)</span></span> &#123;</span><br><span class="line">        presenter?.showHello()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">func</span> <span class="title">viewDidLoad</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.view.addSubview(label)</span><br><span class="line">        <span class="keyword">self</span>.view.addSubview(button)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">MyHelloView</span>:<span class="title">HelloView</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">sayHello</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">self</span>.label.text = <span class="string">&quot;hello&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>MVP在苹果的MVC上进一步的区分了三个模块之间的关系，而且明确了UIViewController的职责所在。</p>
+<h2 id="MVVM"><a href="#MVVM" class="headerlink" title="MVVM"></a>MVVM</h2><p><img src="https://i.imgur.com/ZZDJcOy.jpg"><br>MVVM与MVP十分相似，UIViewController承担View的角色。View和Model之间不存在紧耦合。<br>不一样的是MVP中Presenter处理view的更新方法。而MVVM通过数据绑定，让视图处理视图的更新。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">import UIKit</span><br><span class="line"></span><br><span class="line">struct Person &#123;</span><br><span class="line">    var name:String</span><br><span class="line">    var age:String</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">protocol HelloViewModelProtocol: class &#123;</span><br><span class="line">    var hello:String? &#123; get &#125;</span><br><span class="line"></span><br><span class="line">    var helloStrDidChange:((HelloViewModelProtocol) -&gt; ())? &#123;get set&#125;</span><br><span class="line">    init(_ person:Person)</span><br><span class="line">    func sayHello()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class HelloViewModel:HelloViewModelProtocol &#123;</span><br><span class="line">    var helloStrDidChange: ((HelloViewModelProtocol) -&gt; ())?</span><br><span class="line">    let person:Person</span><br><span class="line">    required init(_ person: Person) &#123;</span><br><span class="line">        self.person &#x3D; person</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @objc func sayHello() &#123;</span><br><span class="line">        self.hello &#x3D; &quot;hello \(Date.init().description)&quot;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    var hello:String? &#123;</span><br><span class="line">        didSet &#123;</span><br><span class="line">            self.helloStrDidChange?(self)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class MyHelloView:UIViewController &#123;</span><br><span class="line">    var label:UILabel &#x3D; &#123;</span><br><span class="line">        let label &#x3D; UILabel.init()</span><br><span class="line">        return label</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    lazy var button:UIButton &#x3D; &#123;</span><br><span class="line">        let button &#x3D; UIButton.init(type: .system)</span><br><span class="line">        button.addTarget(self.viewModel, action: #selector(HelloViewModel.sayHello), for: .touchUpInside)</span><br><span class="line">        return button</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    var viewModel:HelloViewModel? &#123;</span><br><span class="line">        didSet &#123;</span><br><span class="line">            self.viewModel?.helloStrDidChange &#x3D; &#123; [weak self] vm in</span><br><span class="line">                self?.label.text &#x3D; vm.hello</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    override func viewDidLoad() &#123;</span><br><span class="line">        self.view.addSubview(label)</span><br><span class="line">        self.view.addSubview(button)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">let model &#x3D; Person.init(name: &quot;foo&quot;, age: &quot;12&quot;)</span><br><span class="line">let vm &#x3D; HelloViewModel.init(model)</span><br><span class="line">let vc &#x3D; MyHelloView.init()</span><br><span class="line">vc.viewModel &#x3D; vm</span><br></pre></td></tr></table></figure>
+<p>同样的一个例子，与MVP中不同的是，ViewModel中并不添加额外的代码对View进行操作。<br>MVVM将MVP中对View的操作放回了视图。通过数据绑定可以更加方便的将view和controller进行分离。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>这里讨论的MVC是苹果的MVC，即苹果改进的MVC</p>
+<ol>
+<li>MVC MVP MVVM只是不断的职责分离不断地解耦地过程。</li>
+<li>本质上MVC MVP MVVM只是叫法上的不同。Model一直代表的是数据层。V一直代表的是视图层。而C P VM是不同的职责划分对于控制逻辑这块不同的叫法。</li>
+<li>MVC中，V和C相互有紧密的耦合，UIViewController职责不明。</li>
+<li>MVP中，在MVC的基础上，把UIViewController的职责明确成View视图层。将其中Controller的部分用Presenter来承担，Presenter作为View和Model的媒介，即更新Model也更新View。</li>
+<li>MVVM中 在MVP的基础上觉得Presenter中对视图的更新，应该让视图去做。加上响应式的编程方式，使得MVVM看起来特别优美。</li>
+<li>MVC是经典的UI组织框架，用起来简单方便。</li>
+<li>MVP，MVVM在MVC的基础上进行了改进。改进的优点是解耦，易测试。改进之后会让代码变得更多，有很多代码花费在数据绑定等操作上。而MVVM配合响应式的编程方式写得好会很优美，写不好会加大测试难度。</li>
+<li>MVVM的创造者也说过MVVM在小型的UI场景中不适合，在大型的UI场景下，数据绑定又会很花时间，所以如何选择适合的框架还是看团队。</li>
+</ol>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://medium.com/ios-os-x-development/ios-architecture-patterns-ecba4c38de52">https://medium.com/ios-os-x-development/ios-architecture-patterns-ecba4c38de52</a><a target="_blank" rel="noopener" href="https://medium.com/ios-os-x-development/ios-architecture-patterns-ecba4c38de52">https://medium.com/ios-os-x-development/ios-architecture-patterns-ecba4c38de52</a>)</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/21/Code%20Review%E6%B5%81%E7%A8%8B%E6%A2%B3%E7%90%86/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Code Review流程梳理
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/11/30/Instrument%20%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Instrument 使用技巧</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

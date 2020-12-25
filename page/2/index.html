@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hulu&#39;s Blog">
+<meta property="og:url" content="http://example.com/page/2/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="hulu">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-SwiftJSON" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/07/20/SwiftJSON/">SwiftJSON 源码解读</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/07/20/SwiftJSON/" class="article-date">
+  <time datetime="2017-07-19T16:00:00.000Z" itemprop="datePublished">2017-07-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="SwiftJSON-源码解析"><a href="#SwiftJSON-源码解析" class="headerlink" title="SwiftJSON 源码解析"></a>SwiftJSON 源码解析</h1><p>SwiftJson通过对JSONSerialization对象进行加工，包装成常用的对象给user使用。</p>
+<p>源码逻辑步骤</p>
+<ol>
+<li>错误枚举</li>
+<li>定义JSON对象中包含的类型，比如有array类型，string类型可以被解析</li>
+<li>定义结构体JSON，初始化方法等</li>
+<li>解析unwrapped方法，将JSONSerialization对象递归解构成JSON对象的嵌套</li>
+<li>定义一个实现了Comparable的Index枚举</li>
+<li>JSON实现Collection，用上面的Index作为索引，如startIndex，endIndex</li>
+<li>定义JSONKey枚举，让String，Int也可以通过下标来获得</li>
+<li>实现JSON的subscript方法</li>
+<li>实现字面量创建对象，如JSON.init(“&quot;123&quot;:&quot;456”&quot;)</li>
+<li>实现RawRepresentable协议，让JSON对象可以转化成原始的json字符串或者data</li>
+<li>获取json对象中具体的对象，如<code>json.arrayObject </code></li>
+<li>实现JSON对象的<code>Comparable</code>协议</li>
+<li>实现JSON的<code>Codable</code>协议</li>
+</ol>
+<p>学习总结:</p>
+<ol>
+<li>对协议的了如指掌。SwiftJson本身并没有什么复杂的设计。其本身就是对JSONSerialization对象的封装。</li>
+<li>了解了一些系统协议的使用方式Comparable，Collection, ExpressibleByStringLiteral,RawRepresentable,Codable</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Runloop" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/04/08/Runloop/">Runloop小记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/04/08/Runloop/" class="article-date">
+  <time datetime="2017-04-07T16:00:00.000Z" itemprop="datePublished">2017-04-08</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Runloop小记"><a href="#Runloop小记" class="headerlink" title="Runloop小记"></a>Runloop小记</h1><h2 id="Runloop-是什么？"><a href="#Runloop-是什么？" class="headerlink" title="Runloop 是什么？"></a>Runloop 是什么？</h2><p>The programmatic interface to objects that manages input sources</p>
+<ol>
+<li>是一个对象，是用来管理消息和事件的。</li>
+<li>是线程保活的工具,主线程在启动之初就加载了runloop，子线程需要主动去调用添加runloop方法，才能使用runloop对象</li>
+<li>runloop是一种Event Loop.runloop会一直处于几种状态循环</li>
+</ol>
+<h2 id="Runloop-与线程的关系"><a href="#Runloop-与线程的关系" class="headerlink" title="Runloop 与线程的关系"></a>Runloop 与线程的关系</h2><p>刚才说到主线程在启动之初就获取了runloop，子线程需要aThread.currentRunloop去获得关于该线程的runloop。<br>线程和runloop的关系是一一对应的，都保存在一个全局字典里。</p>
+<h2 id="Runloop对外接口"><a href="#Runloop对外接口" class="headerlink" title="Runloop对外接口"></a>Runloop对外接口</h2><p>CFRunloopRef<br>CFRunloopModeRef<br>CFRunloopSourceRef<br>CFRunloopTimerRef<br>CFRunloopObserverRef</p>
+<p>runloop对象中包含若干个Mode，每个Mode中又包含SourceRef,timerRef,observerRef. Source Timer Observer都是观察者。</p>
+<h2 id="Runloop运行逻辑"><a href="#Runloop运行逻辑" class="headerlink" title="Runloop运行逻辑"></a>Runloop运行逻辑</h2><p><img src="https://i.imgur.com/PhYM0LI.png" alt="RunLoop_1"></p>
+<h2 id="Runloop底层实现"><a href="#Runloop底层实现" class="headerlink" title="Runloop底层实现"></a>Runloop底层实现</h2><p>runloop最核心的原理就是有任务处理不停的循环，没任务进入休眠状态等待唤醒。循环是因为本身就处于循环语句中；休眠等待唤醒是调用mach_msg()功能。</p>
+<h2 id="Runloop功能"><a href="#Runloop功能" class="headerlink" title="Runloop功能"></a>Runloop功能</h2><ol>
+<li>AutoReleasePool在runloop中有两个Observer，一个是在进入loop的时候创建自动释放池，一个是在休眠或者退出的时候释放池中对象。</li>
+<li>事件响应 touch，按键等事件都会通过主线程runloop中注册的Source1对象接受系统事件</li>
+<li>手势识别 当手势识别创建销毁改变状态的时候，Runloop中有_UIGestureRecognizerUpdateObserver来处理执行手势回调</li>
+<li>界面更新 当操作UI改变Frame，更新UIView/CALayer的时候，或者调用layoutIfNeed等，这个view便会被标记。在runloop即将进入休眠或者退出的时候去更新UI。</li>
+<li>定时器 Timer就是对CFRunloopTimerRef的封装，一个Timer注册到runloop，runloop会在timer的时间点注册事件。当到达事件时间的时候调用timer回调</li>
+<li>performSelect:afterDelay: 也会在runloop中注册timer。</li>
+<li>GCD</li>
+<li>NSURLConnection </li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>
