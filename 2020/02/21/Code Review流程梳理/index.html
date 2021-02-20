@@ -5,15 +5,15 @@
   
   <title>Code Review流程梳理 | Hulu&#39;s Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Code Review 流程梳理Code Review 当前问题反馈时间的问题小伙伴反馈时间是一个大问题。我拿我个人举例子做romwe直播13天总共4000行代码，做outfit列表页重构6天总共2000行代码。一天平均产出300多行。而由报告指出最佳的code reivew是一小时500行。也就是如果一个组4个人，一天就需要2-3个小时去review代码，这样的现实条件肯定是不允许的。 revi">
+  <meta name="description" content="Code Review 流程梳理Code Review 当前问题反馈时间的问题小伙伴反馈时间是一个大问题。我拿我个人举例子做直播13天总共4000行代码，做outfit列表页重构6天总共2000行代码。一天平均产出300多行。而由报告指出最佳的code reivew是一小时500行。也就是如果一个组4个人，一天就需要2-3个小时去review代码，这样的现实条件肯定是不允许的。 review的时候">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Code Review流程梳理">
 <meta property="og:url" content="http://example.com/2020/02/21/Code%20Review%E6%B5%81%E7%A8%8B%E6%A2%B3%E7%90%86/index.html">
 <meta property="og:site_name" content="Hulu&#39;s Blog">
-<meta property="og:description" content="Code Review 流程梳理Code Review 当前问题反馈时间的问题小伙伴反馈时间是一个大问题。我拿我个人举例子做romwe直播13天总共4000行代码，做outfit列表页重构6天总共2000行代码。一天平均产出300多行。而由报告指出最佳的code reivew是一小时500行。也就是如果一个组4个人，一天就需要2-3个小时去review代码，这样的现实条件肯定是不允许的。 revi">
+<meta property="og:description" content="Code Review 流程梳理Code Review 当前问题反馈时间的问题小伙伴反馈时间是一个大问题。我拿我个人举例子做直播13天总共4000行代码，做outfit列表页重构6天总共2000行代码。一天平均产出300多行。而由报告指出最佳的code reivew是一小时500行。也就是如果一个组4个人，一天就需要2-3个小时去review代码，这样的现实条件肯定是不允许的。 review的时候">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-02-20T16:00:00.000Z">
-<meta property="article:modified_time" content="2020-12-25T10:15:38.312Z">
+<meta property="article:modified_time" content="2021-02-20T08:14:59.554Z">
 <meta property="article:author" content="hulu">
 <meta property="article:tag" content="code review, iOS, Swift">
 <meta name="twitter:card" content="summary">
@@ -56,7 +56,7 @@
     </div>
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="Code-Review-流程梳理"><a href="#Code-Review-流程梳理" class="headerlink" title="Code Review 流程梳理"></a>Code Review 流程梳理</h1><h3 id="Code-Review-当前问题反馈"><a href="#Code-Review-当前问题反馈" class="headerlink" title="Code Review 当前问题反馈"></a>Code Review 当前问题反馈</h3><h4 id="时间的问题"><a href="#时间的问题" class="headerlink" title="时间的问题"></a>时间的问题</h4><p>小伙伴反馈时间是一个大问题。<br>我拿我个人举例子做romwe直播13天总共4000行代码，做outfit列表页重构6天总共2000行代码。一天平均产出300多行。而由报告指出最佳的code reivew是一小时500行。也就是如果一个组4个人，一天就需要2-3个小时去review代码，这样的现实条件肯定是不允许的。</p>
+        <h1 id="Code-Review-流程梳理"><a href="#Code-Review-流程梳理" class="headerlink" title="Code Review 流程梳理"></a>Code Review 流程梳理</h1><h3 id="Code-Review-当前问题反馈"><a href="#Code-Review-当前问题反馈" class="headerlink" title="Code Review 当前问题反馈"></a>Code Review 当前问题反馈</h3><h4 id="时间的问题"><a href="#时间的问题" class="headerlink" title="时间的问题"></a>时间的问题</h4><p>小伙伴反馈时间是一个大问题。<br>我拿我个人举例子做直播13天总共4000行代码，做outfit列表页重构6天总共2000行代码。一天平均产出300多行。而由报告指出最佳的code reivew是一小时500行。也就是如果一个组4个人，一天就需要2-3个小时去review代码，这样的现实条件肯定是不允许的。</p>
 <h4 id="review的时候没有目标"><a href="#review的时候没有目标" class="headerlink" title="review的时候没有目标"></a>review的时候没有目标</h4><p>小组开始review却没有任何目标，review到底要review哪些点。在时间紧张的情况下，有没有目标，review也就像无头苍蝇能找到几个可以修改的点就完事了。</p>
 <h4 id="review之后没有改进"><a href="#review之后没有改进" class="headerlink" title="review之后没有改进"></a>review之后没有改进</h4><p>辛辛苦苦做了review也发现了一些问题，但是没有修改，又或者说到了测试阶段，已经不太方便做大的调整。review之后的东西并没有去修改review的意义也就不复存在了。</p>
 <h2 id="问题对策"><a href="#问题对策" class="headerlink" title="问题对策"></a>问题对策</h2><h4 id="定制Code-Review的目标"><a href="#定制Code-Review的目标" class="headerlink" title="定制Code Review的目标"></a>定制Code Review的目标</h4><p>检查点表明了我们对代码有着怎样的要求。一般有以下方向可以作为Code Review的检查点。</p>
