@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>WKWebView js 交互基础 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="WKWebView JS调用的基础.WKUserContentController对象为JavaScript提供了一种发送消息的途径。它通过webViewConfiguration于一个webView建立联系，通俗的意思就是wkWebView.configuration.userContentController来进行消息配置 web发送消息给原生web通过调用javascript代码 windo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WKWebView js 交互基础">
+<meta property="og:url" content="http://example.com/2021/02/20/%E4%BA%A4%E4%BA%92%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="WKWebView JS调用的基础.WKUserContentController对象为JavaScript提供了一种发送消息的途径。它通过webViewConfiguration于一个webView建立联系，通俗的意思就是wkWebView.configuration.userContentController来进行消息配置 web发送消息给原生web通过调用javascript代码 windo">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-20T07:46:24.000Z">
+<meta property="article:modified_time" content="2021-02-20T08:08:38.933Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="WKWebView, js">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-交互基础" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      WKWebView js 交互基础
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2021/02/20/%E4%BA%A4%E4%BA%92%E5%9F%BA%E7%A1%80/" class="article-date">
+  <time datetime="2021-02-20T07:46:24.000Z" itemprop="datePublished">2021-02-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>WKWebView JS调用的基础.<br>WKUserContentController对象为JavaScript提供了一种发送消息的途径。它通过webViewConfiguration于一个webView建立联系，通俗的意思就是wkWebView.configuration.userContentController来进行消息配置</p>
+<h4 id="web发送消息给原生"><a href="#web发送消息给原生" class="headerlink" title="web发送消息给原生"></a>web发送消息给原生</h4><p>web通过调用javascript代码 <code>window.webkit.messagehandlers.event.postMessage(message)</code>来进行消息的发送</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;web端js通过调用</span><br><span class="line">window.webkit.messageHandlers.sendString.</span><br><span class="line">            postMessage(&#39;hello&#39;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="原生接受消息"><a href="#原生接受消息" class="headerlink" title="原生接受消息"></a>原生接受消息</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;给userContentController添加代理和event名称。与window.webkit.messageHandlers.sendString.</span><br><span class="line">            postMessage(&#39;hello&#39;);中的sendString对应</span><br><span class="line">webView.configuration.userContentController.add(self, name:&quot;sendString&quot;)</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;实现代理func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage)</span><br><span class="line">public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) &#123;</span><br><span class="line">    &#x2F;&#x2F;解析message，name和body分别对应事件名和事件主体</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="原生发送消息给web"><a href="#原生发送消息给web" class="headerlink" title="原生发送消息给web"></a>原生发送消息给web</h4><p>原生发消息给web是通过代码构建js语句，发送给web</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;编写js代码</span><br><span class="line">let jsStr &#x3D; &quot;document.body.style.backgroundColor &#x3D; red; &quot;</span><br><span class="line">&#x2F;&#x2F;调用webView的evaluateJavaScript方法调用web方法</span><br><span class="line">webView.evaluateJavaScript(jsStr) &#123; (result, error) in</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="原生发送js，原生接收"><a href="#原生发送js，原生接收" class="headerlink" title="原生发送js，原生接收"></a>原生发送js，原生接收</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;注册事件</span><br><span class="line">webView.configuration.userContentController.add(self, name: &quot;event&quot;)</span><br><span class="line">&#x2F;&#x2F;需要调用的js代码</span><br><span class="line">let jsStr &#x3D; &quot;window.webkit.messageHandlers.event.postMessage(hello);&quot;</span><br><span class="line">&#x2F;&#x2F;创建js对象</span><br><span class="line">let js &#x3D; WKUserScript.init(source: jsStr, injectionTime: .atDocumentEnd, forMainFrameOnly: true)</span><br><span class="line">&#x2F;&#x2F;调用userContent.Controller.addUserScript方法</span><br><span class="line">webView.configuration.userContentController.addUserScript(js)</span><br></pre></td></tr></table></figure>
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2021/02/20/WKWebView%E9%A2%84%E5%8A%A0%E8%BD%BD%E8%AE%BE%E8%AE%A1/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">WKWebView预加载设计</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2021 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

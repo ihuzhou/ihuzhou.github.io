@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>WKWebView静态资源拦截 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="如何拦截iOS中的WebView请求,目前发现的有两种方案。    方案 优点 缺点    NSURLProtocol 1. 从UIWebView就存在的方案，可以快速移植到WK 1. 全局拦截  2. 需要调用私有方法，有被拒风险   WKURLSchemeHandler 1. 与WKWebView兼容良好 2. 可以针对单个WebView进行拦截 1. 需要屏蔽系统对http&#x2F;https协议的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WKWebView静态资源拦截">
+<meta property="og:url" content="http://example.com/2021/02/20/%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E6%8B%A6%E6%88%AA%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="如何拦截iOS中的WebView请求,目前发现的有两种方案。    方案 优点 缺点    NSURLProtocol 1. 从UIWebView就存在的方案，可以快速移植到WK 1. 全局拦截  2. 需要调用私有方法，有被拒风险   WKURLSchemeHandler 1. 与WKWebView兼容良好 2. 可以针对单个WebView进行拦截 1. 需要屏蔽系统对http&#x2F;https协议的">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-20T07:44:58.000Z">
+<meta property="article:modified_time" content="2021-02-20T08:06:17.757Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="WKWebView, WKURLSChemeHandler">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-静态资源拦截设计" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      WKWebView静态资源拦截
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2021/02/20/%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E6%8B%A6%E6%88%AA%E8%AE%BE%E8%AE%A1/" class="article-date">
+  <time datetime="2021-02-20T07:44:58.000Z" itemprop="datePublished">2021-02-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>如何拦截iOS中的WebView请求,目前发现的有两种方案。</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NSURLProtocol</td>
+<td>1. 从UIWebView就存在的方案，可以快速移植到WK</td>
+<td>1. 全局拦截  2. 需要调用私有方法，有被拒风险</td>
+</tr>
+<tr>
+<td>WKURLSchemeHandler</td>
+<td>1. 与WKWebView兼容良好 2. 可以针对单个WebView进行拦截</td>
+<td>1. 需要屏蔽系统对http/https协议的缓存拦截 2. 只能适配iOS11及以上</td>
+</tr>
+</tbody></table>
+<p>因为已经处于iOS14时代，且没有webview方案的约束，直接使用WKURLSchemeHandler是一个比较好的选择。</p>
+<h2 id="1-需要关闭Webkit默认的对http-https的拦截"><a href="#1-需要关闭Webkit默认的对http-https的拦截" class="headerlink" title="1. 需要关闭Webkit默认的对http/https的拦截"></a>1. 需要关闭Webkit默认的对http/https的拦截</h2><p>WKURLSchemeHandler是无法直接处理http/https这样公认的Scheme的。根据源码推测，WebKit库对http/https进行了拦截缓存等处理，这样使得用户无法对http/https进行拦截。如果关闭WebKit对任何Scheme类型的拦截，那么就可以在代码中处理</p>
+<p>为了验证推测，实现以下代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">@interface WKWebView (CustomURLScheme)</span><br><span class="line"></span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@implementation WKWebView (CustomURLScheme)</span><br><span class="line">+ (BOOL)handlesURLScheme:(NSString *)urlScheme &#123;</span><br><span class="line">    return NO;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>利用OC的Category特性，将原类的方法覆盖。现在发现</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">configuration.setURLSchemeHandler(handler, forURLScheme: <span class="string">&quot;http&quot;</span>)</span><br><span class="line">configuration.setURLSchemeHandler(handler, forURLScheme: <span class="string">&quot;https&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>可以正常拦截http/https了</p>
+<h2 id="2-自定义URLSchemeHandler对象"><a href="#2-自定义URLSchemeHandler对象" class="headerlink" title="2. 自定义URLSchemeHandler对象"></a>2. 自定义URLSchemeHandler对象</h2><p>自定义的URLSchemeHandler对象需要实现<code>WKURLSchemeHandler</code>协议，实现其中最重要的两个方法</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@available</span>(iOS <span class="number">11.0</span>, *)</span><br><span class="line"><span class="class"><span class="keyword">extension</span> <span class="title">HZWKURLHandler</span>: <span class="title">WKURLSchemeHandler</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">func</span> <span class="title">webView</span><span class="params">(<span class="number">_</span> webView: WKWebView, start urlSchemeTask: WKURLSchemeTask)</span></span> &#123;</span><br><span class="line">        <span class="comment">//保存urlSchemeTask</span></span><br><span class="line">        urlSchemeInUse[urlSchemeTask.description] = <span class="literal">true</span></span><br><span class="line">        <span class="comment">//请求准备</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">func</span> <span class="title">webView</span><span class="params">(<span class="number">_</span> webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask)</span></span> &#123;</span><br><span class="line">        urlSchemeInUse[urlSchemeTask.description] = <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>前者是拦截开始的方法，后者是拦截停止的方法.其中拦截最重要的参数<code>urlSchemeTask</code>对象，是实现以下协议的对象</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@available</span>(iOS <span class="number">11.0</span>, *)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">protocol</span> <span class="title">WKURLSchemeTask</span> : <span class="title">NSObjectProtocol</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> request: <span class="type">URLRequest</span> &#123; <span class="keyword">get</span> &#125;</span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">didReceive</span><span class="params">(<span class="number">_</span> response: URLResponse)</span></span></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">didReceive</span><span class="params">(<span class="number">_</span> data: Data)</span></span></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">didFinish</span><span class="params">()</span></span></span><br><span class="line">    <span class="function"><span class="keyword">func</span> <span class="title">didFailWithError</span><span class="params">(<span class="number">_</span> error: Error)</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>梳理一下拦截的流程</p>
+<ol>
+<li>当我们拦截了一个链接 <code>urlSchemeTask</code>将request保存。</li>
+<li>通过start 代理方法，让我们处理。处理完成调用<code>didReceive</code>，<code>didFinish</code>，<code>didFailWithError</code>等方法完成数据填充或请求失败。</li>
+<li>在处理过程中可能会<code>stop urlSchemeTask</code>代理方法如果作用，表明urlSchemeTask已经释放，强行调用会野指针<strong>EXC_BAD_ACCESS</strong>，报错 <strong>This task has already been stopped</strong></li>
+</ol>
+<h2 id="3-实现网络加载-本地缓存"><a href="#3-实现网络加载-本地缓存" class="headerlink" title="3. 实现网络加载 + 本地缓存"></a>3. 实现网络加载 + 本地缓存</h2><p>拦截一个request，最主要的目的是自主决策如何应对这个request。一般处理有以下几种</p>
+<ol>
+<li>对js/css静态资源使用缓存技术</li>
+<li>对于图片，可以与原生公用一套图片处理模块，减少图片在不同缓存体系下重复缓存</li>
+<li>对动态数据使用原生请求，共用同一套请求模版，同一个请求头。</li>
+</ol>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> headers = urlSchemeTask.request.allHTTPHeaderFields</span><br><span class="line">      <span class="keyword">guard</span> <span class="keyword">let</span> requestUrlString = urlSchemeTask.request.url?.absoluteString <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">return</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//对不同请求类型进行处理</span></span><br><span class="line">      <span class="keyword">if</span> <span class="keyword">let</span> accept = headers?[<span class="string">&quot;Accept&quot;</span>],</span><br><span class="line">         accept.<span class="built_in">contains</span>(<span class="string">&quot;image&quot;</span>)  &#123;</span><br><span class="line">         <span class="comment">//当接受到图片的时候，桥接本地SDWebImage处理，和原生共用一套缓存</span></span><br><span class="line">          photoRequest(urlSchemeTask)</span><br><span class="line">      &#125; <span class="keyword">else</span></span><br><span class="line">      <span class="keyword">if</span> requestUrlString.isJSOrCss() &#123;</span><br><span class="line">          <span class="comment">//当遇到js/css的时候先查一遍本地缓存</span></span><br><span class="line">          localRequest(urlSchemeTask)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">//请求不处理，直接走网络</span></span><br><span class="line">          remoteRequest(urlSchemeTask)</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-添加http-https拦截"><a href="#4-添加http-https拦截" class="headerlink" title="4. 添加http/https拦截"></a>4. 添加http/https拦截</h2><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> configuration = <span class="type">WKWebViewConfiguration</span>.<span class="keyword">init</span>()</span><br><span class="line"><span class="keyword">if</span> #available(iOS <span class="number">11.0</span>, *) &#123;</span><br><span class="line">    <span class="keyword">let</span> handler = <span class="type">HZWKURLHandler</span>.shared</span><br><span class="line">    configuration.setURLSchemeHandler(handler, forURLScheme: <span class="string">&quot;http&quot;</span>)</span><br><span class="line">    configuration.setURLSchemeHandler(handler, forURLScheme: <span class="string">&quot;https&quot;</span>)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// Fallback on earlier versions</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> preferences =  <span class="type">WKPreferences</span>.<span class="keyword">init</span>()</span><br><span class="line">preferences.javaScriptCanOpenWindowsAutomatically = <span class="literal">true</span></span><br><span class="line">configuration.preferences = preferences</span><br><span class="line">configuration.userContentController = <span class="type">WKUserContentController</span>.<span class="keyword">init</span>()</span><br></pre></td></tr></table></figure>
+<p>拦截方法主要是<code>configuration.setURLSchemeHandler(handler, forURLScheme: &quot;http&quot;)</code>在<code>WKWebViewConfiguration</code>对象中配置</p>
+<h2 id="5-拦截过程中遇到的问题"><a href="#5-拦截过程中遇到的问题" class="headerlink" title="5. 拦截过程中遇到的问题"></a>5. 拦截过程中遇到的问题</h2><ol>
+<li>在做图片拦截的时候我们需要将请求桥接到native的图片框架中，那么如何识别一个资源是图片资源就很重要。我们可以根据请求头中的Accept参数识别一个url是否是图片资源。打印一下请求图片的Accept参数 <code>image/png,image/svg+xml,image/*;q=0.8,video/*;q=0.8,*/*;q=0.5</code>，判断Accept中是否包含image即可判断请求内容是否为图片</li>
+<li>urlSchemeTask释放问题，上面已经描述过了</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/02/20/WKWebView%E9%A2%84%E5%8A%A0%E8%BD%BD%E8%AE%BE%E8%AE%A1/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          WKWebView预加载设计
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/02/20/iOS%E7%AE%80%E5%8D%95%E7%BC%93%E5%AD%98%E8%AE%BE%E8%AE%A1/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">iOS简单缓存设计</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2021 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

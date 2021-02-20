@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>WKWebView预加载设计 | Hulu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="为什么要预加载 - WKWebView启动时间统计WKWebView从开始到完成页面显示，要经历一连串的启动加载环节，这段时间都是白屏的。做启动优化需要知道白屏的阶段和如何降低每个阶段的等待时间。WKWebView启动到加载这段时间也是白屏，我们需要了解这段时间白屏的时间长度，这段时间的白屏是否需要优化。 将开始时间设置为WKWebView所在的ViewController的viewDidLoad">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WKWebView预加载设计">
+<meta property="og:url" content="http://example.com/2021/02/20/WKWebView%E9%A2%84%E5%8A%A0%E8%BD%BD%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="Hulu&#39;s Blog">
+<meta property="og:description" content="为什么要预加载 - WKWebView启动时间统计WKWebView从开始到完成页面显示，要经历一连串的启动加载环节，这段时间都是白屏的。做启动优化需要知道白屏的阶段和如何降低每个阶段的等待时间。WKWebView启动到加载这段时间也是白屏，我们需要了解这段时间白屏的时间长度，这段时间的白屏是否需要优化。 将开始时间设置为WKWebView所在的ViewController的viewDidLoad">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-20T07:46:03.000Z">
+<meta property="article:modified_time" content="2021-02-20T08:08:00.500Z">
+<meta property="article:author" content="hulu">
+<meta property="article:tag" content="WKWebView">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternative" href="/atom.xml" title="Hulu&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-WKWebView预加载设计" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      WKWebView预加载设计
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2021/02/20/WKWebView%E9%A2%84%E5%8A%A0%E8%BD%BD%E8%AE%BE%E8%AE%A1/" class="article-date">
+  <time datetime="2021-02-20T07:46:03.000Z" itemprop="datePublished">2021-02-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="为什么要预加载-WKWebView启动时间统计"><a href="#为什么要预加载-WKWebView启动时间统计" class="headerlink" title="为什么要预加载 - WKWebView启动时间统计"></a>为什么要预加载 - WKWebView启动时间统计</h2><p>WKWebView从开始到完成页面显示，要经历一连串的启动加载环节，这段时间都是白屏的。做启动优化需要知道白屏的阶段和如何降低每个阶段的等待时间。WKWebView启动到加载这段时间也是白屏，我们需要了解这段时间白屏的时间长度，这段时间的白屏是否需要优化。</p>
+<p>将开始时间设置为WKWebView所在的ViewController的<code>viewDidLoad</code>方法，结束时间为<code>WKNavigationDelegate Start</code>的代理<code>didStartProvisionalNavigation</code>触发的时间。<br>测试机型为iPhone 11 pro max 13.6 simulator</p>
+<table>
+<thead>
+<tr>
+<th>VCStart(second)</th>
+<th>RequestStart(second)</th>
+<th>VCStart - RequestStart(ms)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>37.0606232</td>
+<td>37.422271</td>
+<td>360</td>
+</tr>
+<tr>
+<td>72.887713</td>
+<td>73.178119</td>
+<td>290</td>
+</tr>
+<tr>
+<td>81.504813</td>
+<td>81.790588</td>
+<td>290</td>
+</tr>
+<tr>
+<td>86.703848</td>
+<td>86.992729</td>
+<td>290</td>
+</tr>
+<tr>
+<td>93.193314</td>
+<td>93.483578</td>
+<td>290</td>
+</tr>
+<tr>
+<td>97.89509</td>
+<td>98.183564</td>
+<td>290</td>
+</tr>
+<tr>
+<td>05.3545132</td>
+<td>05.6421251</td>
+<td>290</td>
+</tr>
+<tr>
+<td>75.025178</td>
+<td>75.311763</td>
+<td>290</td>
+</tr>
+<tr>
+<td>79.290159</td>
+<td>79.57753</td>
+<td>280</td>
+</tr>
+<tr>
+<td>82.056283</td>
+<td>82.351499</td>
+<td>300</td>
+</tr>
+</tbody></table>
+<p>可以看出第一次启动时间为360ms，剩下都在290ms左右。也就是说白屏中有300ms左右的时间是WebView还未开始加载所消耗的时间。</p>
+<h2 id="预加载"><a href="#预加载" class="headerlink" title="预加载"></a>预加载</h2><p>探究WKWebView启动慢的原因，我们从网络上得出了一定的信息。大致意思是:当打开app的时候，是没有启动浏览器的内核的，app打开一个网页需要先启动浏览器内核，启动线程等行为消耗了很多时间。然而即使不是第一次打开webkit，也需要300ms，还是太长了。<br>Webkit到底干了啥？这个问题我们先放在后面的源码分析中。如果把启动时间作为一个既定事实，如何减少WKWebView的启动时间呢？</p>
+<p>思路: 用单例保存一份预加载池。当需要对象的时候就从池中取。这样我们就节省了创建对象所花的时间。</p>
+<p>同样的模拟器，用了预加载展示一下成果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">ViewDidLoad time --- 1613723670.805345</span><br><span class="line">WKNavigationDelegate Start time --- 1613723670.850704</span><br><span class="line">ViewDidLoad time --- 1613723679.0514688</span><br><span class="line">WKNavigationDelegate Start time --- 1613723679.08476</span><br><span class="line">ViewDidLoad time --- 1613723681.143784</span><br><span class="line">WKNavigationDelegate Start time --- 1613723681.180709</span><br><span class="line">ViewDidLoad time --- 1613723683.224917</span><br><span class="line">WKNavigationDelegate Start time --- 1613723683.258789</span><br><span class="line">ViewDidLoad time --- 1613723685.407696</span><br><span class="line">WKNavigationDelegate Start time --- 1613723685.443756</span><br><span class="line">ViewDidLoad time --- 1613723687.196275</span><br><span class="line">WKNavigationDelegate Start time --- 1613723687.23295</span><br><span class="line">ViewDidLoad time --- 1613723689.6150699</span><br><span class="line">WKNavigationDelegate Start time --- 1613723689.651721</span><br><span class="line">ViewDidLoad time --- 1613723693.7213821</span><br><span class="line">WKNavigationDelegate Start time --- 1613723693.755662</span><br><span class="line">ViewDidLoad time --- 1613723696.286388</span><br><span class="line">WKNavigationDelegate Start time --- 1613723696.320518</span><br><span class="line">ViewDidLoad time --- 1613723698.907718</span><br><span class="line">WKNavigationDelegate Start time --- 1613723698.943841</span><br></pre></td></tr></table></figure>
+<p>从页面打开到请求开始的时间间隔缩短到了50ms以内。方案可行</p>
+<h2 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h2><p>预加载池协议</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F; 预加载池</span><br><span class="line">protocol PreloadPool &#123;</span><br><span class="line">    &#x2F;**</span><br><span class="line">     池子中应该存放的对象</span><br><span class="line">     *&#x2F;</span><br><span class="line">    associatedtype Element</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 预加载队列</span><br><span class="line">    var queue : [Element] &#123;get set&#125;</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 池容量</span><br><span class="line">    var capacity : Int &#123;get&#125;</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 返回一个已经预加载完成的对象</span><br><span class="line">    func getItem() -&gt; Element?</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现单例类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">import UIKit</span><br><span class="line">import WebKit</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F; 设置预加载池的数量</span><br><span class="line">let WKWebPoolCount: Int &#x3D; 3</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F;预加载池对象</span><br><span class="line">public class WKWebViewPool: PreloadPool &#123;</span><br><span class="line">    typealias Element &#x3D; WingWebView</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 预加载队列</span><br><span class="line">    var queue: [WingWebView] &#x3D; [] &#123;</span><br><span class="line">        didSet &#123;</span><br><span class="line">            &#x2F;&#x2F;池中对象不足，补充对象</span><br><span class="line">            if queue.count &lt; capacity &#123;</span><br><span class="line">                self.queue.append(WingWebView.init(UIScreen.main.bounds))</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    var capacity: Int &#x3D; WKWebPoolCount</span><br><span class="line">    &#x2F;&#x2F;队列锁</span><br><span class="line">    var lock &#x3D; NSLock.init()</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 单例变量，全局控制</span><br><span class="line">    public static var shared : WKWebViewPool &#x3D; &#123;</span><br><span class="line">        let pool &#x3D; WKWebViewPool.init()</span><br><span class="line">        assert(WKWebPoolCount &gt; 0)</span><br><span class="line">        for _ in 0..&lt;WKWebPoolCount &#123;</span><br><span class="line">            pool.queue.append(WingWebView.init(UIScreen.main.bounds))</span><br><span class="line">        &#125;</span><br><span class="line">        return pool</span><br><span class="line">    &#125;()</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 全局的预加载方法</span><br><span class="line">    &#x2F;&#x2F;&#x2F; - Parameter urlString: 接受一个url对象，用于先缓存css&#x2F;js静态资源</span><br><span class="line">    public func preload(_ urlString:String &#x3D; &quot;https:&#x2F;&#x2F;ihuzhou.github.io&quot;) &#123;</span><br><span class="line">        &#x2F;&#x2F;do some initial settings</span><br><span class="line">        let subview &#x3D; WingWebView.init(.zero)</span><br><span class="line">        subview.isHidden &#x3D; true</span><br><span class="line">        if let url &#x3D; URL.init(string: urlString) &#123;</span><br><span class="line">            subview.load(URLRequest.init(url: url))</span><br><span class="line">        &#125;</span><br><span class="line">        UIApplication.shared.windows.first?.addSubview(subview)</span><br><span class="line">        DispatchQueue.main.asyncAfter(deadline:.now() + 10 ) &#123;</span><br><span class="line">            subview.removeFromSuperview()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F;&#x2F; 获取一个预加载对象</span><br><span class="line">    &#x2F;&#x2F;&#x2F; - Returns: 预加载WebView容器</span><br><span class="line">    public func getItem() -&gt; WingWebView? &#123;</span><br><span class="line">        lock.lock()</span><br><span class="line">        defer &#123;</span><br><span class="line">            lock.unlock()</span><br><span class="line">        &#125;</span><br><span class="line">        return queue.popLast()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>预加载池没有回收已经使用的WKWebView，而任由其释放，主要是考虑到WKWebView在使用的时候会设置代理，注册js event等，有一个清理的过程。清理不干净是很麻烦的，为了避免此类问题，就不重用了。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/02/20/%E4%BA%A4%E4%BA%92%E5%9F%BA%E7%A1%80/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          WKWebView js 交互基础
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/02/20/%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E6%8B%A6%E6%88%AA%E8%AE%BE%E8%AE%A1/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">WKWebView静态资源拦截</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/hejianxian" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2021 hulu 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/hejianxian/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a target="_blank" rel="noopener" href="https://github.com/hejianxian" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>
